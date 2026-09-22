@@ -6,8 +6,8 @@ import SuperAdmin from './super-admin';
 
 export default function PortalRouter(){
  const path=usePathname();
- if(path.startsWith('/admin'))return <SuperAdmin/>;
- if(path.startsWith('/user'))return <MobileExperience mode="user"/>;
- if(path.startsWith('/responder'))return <MobileExperience mode="responder"/>;
+ if(path==='/admin'||path.startsWith('/admin/'))return <SuperAdmin/>;
+ if(path==='/user'||path.startsWith('/user/'))return <MobileExperience mode="user"/>;
+ if(path==='/responder'||path.startsWith('/responder/'))return <MobileExperience mode="responder"/>;
  return <Atlas/>;
 }

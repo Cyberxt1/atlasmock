@@ -39,6 +39,8 @@ await dispatcher.setViewportSize({width:1440,height:900});
 await dispatcher.goto('http://127.0.0.1:3000/alerts',{waitUntil:'networkidle'});
 await dispatcher.getByText('Medical Emergency',{exact:true}).first().waitFor();
 const shared=await dispatcher.getByText('Main Library',{exact:true}).count();
+await dispatcher.goto('http://127.0.0.1:3000/responders',{waitUntil:'networkidle'});
+await dispatcher.getByRole('button',{name:'Add responder'}).waitFor();
 console.log(JSON.stringify({userFlow:'passed',responderFlow:'passed',dispatcherSharedIncident:shared>0,runtimeErrors:errors}));
 await browser.close();
 if(errors.length||!shared)process.exitCode=1;
