@@ -1,0 +1,11 @@
+'use client';
+import {usePathname} from 'next/navigation';
+import Atlas from './atlas';
+import MobileExperience from './mobile-experience';
+
+export default function PortalRouter(){
+ const path=usePathname();
+ if(path.startsWith('/user'))return <MobileExperience mode="user"/>;
+ if(path.startsWith('/responder'))return <MobileExperience mode="responder"/>;
+ return <Atlas/>;
+}

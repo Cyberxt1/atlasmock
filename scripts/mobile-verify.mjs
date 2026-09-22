@@ -1,0 +1,40 @@
+import {chromium} from '@playwright/test';
+
+const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
+const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1});
+const user=await context.newPage();
+const errors=[];
+user.on('pageerror',error=>errors.push(error.message));
+await user.goto('http://127.0.0.1:3000/user',{waitUntil:'networkidle'});
+await user.evaluate(()=>{localStorage.removeItem('atlas-user-ready');localStorage.removeItem('atlas-command-v2')});
+await user.reload({waitUntil:'networkidle'});
+await user.waitForTimeout(1600);
+await user.screenshot({path:'artifacts/atlas-user-welcome.png',fullPage:true});
+await user.getByRole('button',{name:'Skip'}).click();
+await user.getByRole('button',{name:'Continue'}).click();
+await user.getByRole('button',{name:/Medical/}).click();
+await user.locator('button.sos').click();
+await user.getByLabel('Incident location').selectOption('Main Library');
+await user.getByLabel('Incident description').fill('Student collapsed near the east entrance and is breathing.');
+await user.getByRole('button',{name:/Review request/}).click();
+await user.getByRole('button',{name:'Send SOS now'}).click();
+await user.getByText('Alert received',{exact:true}).waitFor();
+await user.screenshot({path:'artifacts/atlas-user-tracking.png',fullPage:true});
+
+const responder=await context.newPage();
+responder.on('pageerror',error=>errors.push(error.message));
+await responder.goto('http://127.0.0.1:3000/responder',{waitUntil:'networkidle'});
+await responder.getByRole('heading',{name:'Medical Emergency'}).first().click();
+await responder.getByRole('button',{name:/Accept & navigate/}).click();
+await responder.getByText('Status updated to En Route').waitFor();
+await responder.screenshot({path:'artifacts/atlas-responder-incident.png',fullPage:true});
+
+const dispatcher=await context.newPage();
+dispatcher.on('pageerror',error=>errors.push(error.message));
+await dispatcher.setViewportSize({width:1440,height:900});
+await dispatcher.goto('http://127.0.0.1:3000/alerts',{waitUntil:'networkidle'});
+await dispatcher.getByText('Medical Emergency',{exact:true}).first().waitFor();
+const shared=await dispatcher.getByText('Main Library',{exact:true}).count();
+console.log(JSON.stringify({userFlow:'passed',responderFlow:'passed',dispatcherSharedIncident:shared>0,runtimeErrors:errors}));
+await browser.close();
+if(errors.length||!shared)process.exitCode=1;

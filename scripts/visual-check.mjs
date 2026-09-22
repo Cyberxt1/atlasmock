@@ -1,0 +1,22 @@
+import {chromium} from '@playwright/test';
+const browser=await chromium.launch({channel:'chrome',headless:true});
+const page=await browser.newPage({viewport:{width:1672,height:941}});
+const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.goto('http://127.0.0.1:3000/dashboard',{waitUntil:'networkidle'});
+await page.locator('.leaflet-tile-loaded').first().waitFor();
+await page.getByRole('button',{name:'Medical',exact:true}).click();
+if(await page.locator('.dispatch-marker .security').count()!==0)throw new Error('Medical map filter failed');
+await page.getByRole('button',{name:'All',exact:true}).click();
+await page.getByRole('button',{name:'Zoom in',exact:true}).click();
+await page.getByRole('button',{name:'Recenter campus',exact:true}).click();
+await page.waitForTimeout(700);
+await page.locator('.dispatch-marker').first().click();
+await page.getByRole('dialog').waitFor();
+await page.getByRole('button',{name:'Close dialog'}).click();
+await page.reload({waitUntil:'networkidle'});
+await page.screenshot({path:'artifacts/atlas-desktop.png',fullPage:true});
+console.log('Reference viewport:',await page.evaluate(()=>({width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth,height:document.documentElement.scrollHeight,map:document.querySelector('.campus-panel').getBoundingClientRect().toJSON(),kpi:document.querySelector('.kpi').getBoundingClientRect().height})));
+for(const [width,height,name] of [[1440,900,'1440'],[834,1112,'tablet'],[390,844,'mobile']]){await page.setViewportSize({width,height});await page.waitForTimeout(400);await page.screenshot({path:`artifacts/atlas-${name}.png`,fullPage:true});console.log(name,'overflow:',await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth));}
+console.log('Map filtering, marker details, zoom/recenter, refresh:',errors.length?'FAILED':'passed');
+console.log('Runtime errors:',errors);
+await browser.close();if(errors.length)process.exitCode=1;
