@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {Activity,ArrowLeft,Bell,Camera,Check,ChevronRight,CircleAlert,Clock3,Cross,Flame,History,Home,LocateFixed,Map as MapIcon,MapPin,MessageCircle,Navigation,Phone,Plus,Shield,ShieldCheck,UserRound,Wifi,X} from 'lucide-react';
 import type {Category,Incident,Responder,ActivityEvent} from '@/lib/data';
 import {initialActivity,initialIncidents,initialResponders,locations} from '@/lib/data';
+import {redeemDemoCode,type Organization} from '@/lib/platform';
 
 type CommandState={incidents:Incident[];responders:Responder[];events:ActivityEvent[];broadcasts?:unknown[];preferences?:Record<string,boolean>;simulation?:unknown};
 type Poi={id:string;name:string;type:string;location:string;created:number};
@@ -23,8 +24,13 @@ function Top({title,back,onBack,action}:{title?:string;back?:boolean;onBack?:()=
 function BottomNav({tab,setTab,responder=false}:{tab:string;setTab:(s:string)=>void;responder?:boolean}){const items=responder?[['home','Jobs',Home],['map','Map',MapIcon],['activity','Activity',History],['profile','Profile',UserRound]]:[['home','Home',Home],['history','History',History],['profile','Profile',UserRound]];return <nav className="m-bottom" aria-label="Mobile navigation">{items.map(([key,label,Icon])=><button key={key as string} className={tab===key?'active':''} onClick={()=>setTab(key as string)}><Icon/><span>{label as string}</span></button>)}</nav>}
 
 export default function MobileExperience({mode}:{mode:'user'|'responder'}){
- return <PhoneOnly>{mode==='user'?<UserApp/>:<ResponderApp/>}</PhoneOnly>
+ const [organization,setOrganization]=useState<Organization|null>(null),[ready,setReady]=useState(false);
+ useEffect(()=>{try{const id=localStorage.getItem(`atlas-${mode}-organization`);if(id){const demo=redeemDemoCode(mode==='user'?'ADELEKE-4820':'RESP-AU-001',mode);if(demo?.id===id)setOrganization(demo)}}finally{setReady(true)}},[mode]);
+ if(!ready)return null;
+ return <PhoneOnly>{organization?(mode==='user'?<UserApp/>:<ResponderApp/>):<AccessCode mode={mode} onSuccess={org=>{localStorage.setItem(`atlas-${mode}-organization`,org.id);setOrganization(org)}}/>}</PhoneOnly>
 }
+
+function AccessCode({mode,onSuccess}:{mode:'user'|'responder';onSuccess:(org:Organization)=>void}){const [code,setCode]=useState(''),[error,setError]=useState('');const submit=(e:React.FormEvent)=>{e.preventDefault();const org=redeemDemoCode(code,mode);if(!org){setError('That code is invalid, expired, or belongs to a suspended organization.');return}onSuccess(org)};return <main className="m-access"><div className="access-brand"><Shield/><strong>ATLAS</strong></div><div className="access-copy"><span>{mode==='user'?'JOIN YOUR ORGANIZATION':'RESPONDER ACCESS'}</span><h1>{mode==='user'?'Stay connected to campus safety.':'Your response team is waiting.'}</h1><p>Enter the unique code provided by your {mode==='user'?'organization or campus dispatcher':'dispatcher'}.</p></div><form onSubmit={submit}><label>{mode==='user'?'Organization code':'Responder code'}<input autoFocus value={code} onChange={e=>{setCode(e.target.value.toUpperCase());setError('')}} placeholder={mode==='user'?'e.g. ADELEKE-4820':'e.g. RESP-AU-001'}/></label>{error&&<p className="access-error"><CircleAlert/>{error}</p>}<button className="m-primary" type="submit">Continue securely <ChevronRight/></button></form><div className="demo-code"><span>DEMO CODE</span><button onClick={()=>setCode(mode==='user'?'ADELEKE-4820':'RESP-AU-001')}>{mode==='user'?'ADELEKE-4820':'RESP-AU-001'}</button></div><small className="access-help">Codes are organization-specific. Contact your dispatcher if yours has expired.</small></main>}
 
 function UserApp(){
  const [step,setStep]=useState<'splash'|'welcome'|'permissions'|'app'>(()=>typeof window!=='undefined'&&localStorage.getItem('atlas-user-ready')?'app':'splash');

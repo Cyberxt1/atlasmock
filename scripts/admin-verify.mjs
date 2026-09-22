@@ -1,0 +1,16 @@
+import {chromium} from '@playwright/test';
+const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
+const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[];
+page.on('pageerror',e=>errors.push(e.message));
+await page.goto('http://127.0.0.1:3000/admin',{waitUntil:'networkidle'});
+await page.getByRole('button',{name:'Organizations'}).click();
+await page.getByRole('button',{name:'Onboard organization'}).click();
+await page.getByLabel('Organization name').fill('Verification University');
+await page.getByLabel('Administrator email').fill('admin@verification.edu');
+await page.getByLabel('Main campus').fill('Lagos, Nigeria');
+await page.getByRole('button',{name:'Create organization workspace'}).click();
+await page.getByRole('heading',{name:'Verification University'}).waitFor();
+await page.screenshot({path:'artifacts/atlas-super-admin.png',fullPage:true});
+console.log(JSON.stringify({organizationOnboarding:'passed',runtimeErrors:errors}));
+await browser.close();
+if(errors.length)process.exitCode=1;
