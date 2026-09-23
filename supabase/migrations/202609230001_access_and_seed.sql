@@ -25,7 +25,7 @@ begin
   if selected.role='responder' then
     insert into public.responders(organization_id,profile_id,unit_code,response_role,team,duty_status)
     values(selected.organization_id,(select auth.uid()),coalesce(selected.metadata->>'unit_code','R-NEW'),coalesce(selected.metadata->>'response_role','General'),coalesce(selected.metadata->>'team','Campus Response Team'),'offline')
-    on conflict(profile_id) do update set organization_id=excluded.organization_id,unit_code=excluded.unit_code,response_role=excluded.response_role,team=excluded.team;
+    on conflict(organization_id,unit_code) do update set profile_id=excluded.profile_id,response_role=excluded.response_role,team=excluded.team;
   end if;
 
   update public.access_codes set uses=uses+1 where id=selected.id;
