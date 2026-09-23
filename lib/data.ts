@@ -1,7 +1,7 @@
 export type Category = 'Medical' | 'Security' | 'Fire' | 'General';
 export type Incident = {id:string;title:string;type:Category;severity:string;location:string;status:string;created:number;assigned:string[];eta:number;caller:string;notes:string[];timeline:string[];outcome?:string;simulated?:boolean;simulationDue?:number;coordinates?:[number,number]};
 export type ActivityEvent={title:string;detail:string;age:number;type:string;id?:string;created?:number;read?:boolean;incidentId?:string};
-export type Responder = {id:string;name:string;role:Category;team:string;status:string;location:string;phone:string;battery:number;email?:string;accessCode?:string;organizationId?:string};
+export type Responder = {id:string;name:string;role:Category;team:string;status:string;location:string;phone:string;battery:number;email?:string;accessCode?:string;organizationId?:string;coordinates?:[number,number]};
 export const locations = ['Engineering Complex','Main Library','Student Hostel A','Student Hostel B','Medical Centre','Admin Centre','Sports Complex','Main Gate','Chapel','Cafeteria'];
 // Stable initial timestamps keep server and browser HTML identical. The browser
 // rebases a fresh demo session to the current time after hydration.
