@@ -69,7 +69,7 @@ create or replace function public.has_platform_role(allowed public.platform_role
   select exists(select 1 from public.profiles where id=(select auth.uid()) and role=any(allowed))
 $$;
 create or replace function public.hash_access_code(raw_code text) returns text language sql immutable set search_path='' as $$
-  select encode(digest(upper(trim(raw_code)),'sha256'),'hex')
+  select pg_catalog.encode(extensions.digest(upper(pg_catalog.btrim(raw_code)), 'sha256'::text), 'hex')
 $$;
 create or replace function public.redeem_access_code(raw_code text) returns table(organization_id uuid, granted_role public.platform_role) language plpgsql security definer set search_path='' as $$
 declare selected public.access_codes;
